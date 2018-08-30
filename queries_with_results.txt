@@ -1,0 +1,280 @@
+SQL> start query1.sql
+SQL> SELECT CONCAT(CL.DEPT_CODE, CL.COURSE#) AS COURSE_ID, CRS.TITLE
+  2  FROM COURSES CRS, CLASSES CL
+  3  WHERE CL.DEPT_CODE=CRS.DEPT_CODE AND CRS.COURSE#=CL.COURSE#
+  4  AND CL.SEMESTER='Spring' AND CL.YEAR='2016';
+
+COURSE_ID                                    TITLE                                                                                                                                  
+-------------------------------------------- --------------------                                                                                                                   
+CS432                                        database systems                                                                                                                       
+CS240                                        data structure                                                                                                                         
+Math221                                      calculus I                                                                                                                             
+CS532                                        database systems                                                                                                                       
+
+SQL> start query2.sql
+SQL> SELECT DISTINCT S.B#, S.FIRSTNAME, S.LASTNAME, S.GPA
+  2  FROM STUDENTS S, ENROLLMENTS E, CLASSES CL, COURSES CRS
+  3  WHERE S.B#=E.B# AND E.CLASSID=CL.CLASSID AND CRS.COURSE#=CL.COURSE#
+  4  AND S.B# IN (SELECT S1.B# FROM STUDENTS S1, ENROLLMENTS E1, CLASSES CL1, COURSES CRS1
+  5  WHERE S1.B#=E1.B# AND E1.CLASSID=CL1.CLASSID AND CRS1.COURSE#=CL1.COURSE# AND CRS1.DEPT_CODE='CS')
+  6  AND S.B# IN (SELECT S2.B# FROM STUDENTS S2, ENROLLMENTS E2, CLASSES CL2, COURSES CRS2
+  7  WHERE S2.B#=E2.B# AND E2.CLASSID=CL2.CLASSID AND CRS2.COURSE#=CL2.COURSE# AND CRS2.DEPT_CODE='Math')
+  8  ;
+
+B#   FIRSTNAME       LASTNAME               GPA                                                                                                                                     
+---- --------------- --------------- ----------                                                                                                                                     
+B001 Anne            Broder                3.17                                                                                                                                     
+
+SQL> start query3.sql
+SQL> SELECT DISTINCT CRS.DEPT_CODE, CRS.COURSE#
+  2  FROM COURSES CRS LEFT OUTER JOIN CLASSES CL
+  3  ON CL.COURSE#=CRS.COURSE#
+  4  WHERE (CL.YEAR NOT IN (2015) OR CL.SEMESTER NOT IN ('Fall'))
+  5  OR CL.YEAR IS NULL OR CL.SEMESTER IS NULL;
+
+DEPT    COURSE#                                                                                                                                                                     
+---- ----------                                                                                                                                                                     
+CS          532                                                                                                                                                                     
+Math        221                                                                                                                                                                     
+Biol        425                                                                                                                                                                     
+CS          240                                                                                                                                                                     
+CS          552                                                                                                                                                                     
+CS          432                                                                                                                                                                     
+
+6 rows selected.
+
+SQL> 
+SQL> start query4.sql
+SQL> SELECT DISTINCT S.B#, S.FIRSTNAME, S.LASTNAME, S.GPA
+  2  FROM GRADES G, ENROLLMENTS E, STUDENTS S
+  3  WHERE G.LGRADE=E.LGRADE AND S.B#=E.B#
+  4  AND G.NGRADE < (SELECT NGRADE FROM GRADES WHERE LGRADE='B');
+
+B#   FIRSTNAME       LASTNAME               GPA                                                                                                                                     
+---- --------------- --------------- ----------                                                                                                                                     
+B001 Anne            Broder                3.17                                                                                                                                     
+B004 Barbara         Callan                 2.5                                                                                                                                     
+
+SQL> start query5.sql
+SQL> SELECT CONCAT(FIRSTNAME, CONCAT(' ', LASTNAME)) AS FULLNAME FROM STUDENTS WHERE B# NOT IN (SELECT B# FROM ENROLLMENTS WHERE LGRADE = 'A');
+
+FULLNAME                                                                                                                                                                            
+-------------------------------                                                                                                                                                     
+Terry Buttler                                                                                                                                                                       
+Barbara Callan                                                                                                                                                                      
+Jack Smith                                                                                                                                                                          
+Tom Baker                                                                                                                                                                           
+
+SQL> 
+SQL> start query5.sql
+SQL> SELECT CONCAT(FIRSTNAME, CONCAT(' ', LASTNAME)) AS FULLNAME FROM STUDENTS WHERE B# NOT IN (SELECT B# FROM ENROLLMENTS WHERE LGRADE = 'A');
+
+FULLNAME                                                                                                                                                                            
+-------------------------------                                                                                                                                                     
+Terry Buttler                                                                                                                                                                       
+Barbara Callan                                                                                                                                                                      
+Jack Smith                                                                                                                                                                          
+Tom Baker                                                                                                                                                                           
+
+SQL> 
+SQL> start query6.sql
+SQL> SELECT DISTINCT S.B# AS STUDENT_B#, F.B# AS FACULTY_B# FROM STUDENTS S, ENROLLMENTS E, CLASSES CL, FACULTY F
+  2  WHERE S.B#=E.B# and E.CLASSID=CL.CLASSID AND CL.FACULTY_B#=F.B#
+  3  AND S.DEPTNAME != F.DEPTNAME;
+
+STUD FACU                                                                                                                                                                           
+---- ----                                                                                                                                                                           
+B001 B103                                                                                                                                                                           
+B007 B105                                                                                                                                                                           
+B006 B102                                                                                                                                                                           
+B004 B104                                                                                                                                                                           
+B004 B101                                                                                                                                                                           
+
+SQL> start query7.sql
+SQL> SELECT CRS.DEPT_CODE, CRS.COURSE#
+  2  FROM COURSES CRS, CLASSES CL WHERE CRS.COURSE#=CL.COURSE#
+  3  HAVING COUNT(*) = (SELECT MAX(COUNT(*)) FROM CLASSES GROUP BY COURSE#, DEPT_CODE)
+  4  GROUP BY CRS.COURSE#, CRS.DEPT_CODE;
+
+DEPT    COURSE#                                                                                                                                                                     
+---- ----------                                                                                                                                                                     
+CS          432                                                                                                                                                                     
+Math        314                                                                                                                                                                     
+
+SQL> start query8.sql
+SQL> SELECT CL.CLASSID, CL.DEPT_CODE, CL.COURSE#, CL.LIMIT-CL.CLASS_SIZE AS SEATS_AVAILABLE
+  2  FROM CLASSES CL
+  3  WHERE CL.YEAR=2016 AND CL.SEMESTER='Spring' AND 0!=CL.LIMIT-CL.CLASS_SIZE;
+
+CLASS DEPT    COURSE# SEATS_AVAILABLE                                                                                                                                               
+----- ---- ---------- ---------------                                                                                                                                               
+c0005 CS          240               1                                                                                                                                               
+c0001 CS          432               1                                                                                                                                               
+c0006 CS          532               1                                                                                                                                               
+
+SQL> start query9.sql
+SQL> SELECT * FROM STUDENTS S WHERE 3 < (SELECT COUNT(*) FROM ENROLLMENTS E WHERE E.B#=S.B#);
+
+B#   FIRSTNAME       LASTNAME        STATUS            GPA EMAIL                BDATE     DEPT                                                                                      
+---- --------------- --------------- ---------- ---------- -------------------- --------- ----                                                                                      
+B001 Anne            Broder          junior           3.17 broder@bu.edu        17-JAN-90 CS                                                                                        
+
+SQL> 
+SQL> SELECT * FROM STUDENTS S WHERE S.B# IN (SELECT S1.B# FROM STUDENTS S1, ENROLLMENTS E WHERE E.B#=S1.B# GROUP BY S1.B# HAVING COUNT(S1.B#)>3);
+
+B#   FIRSTNAME       LASTNAME        STATUS            GPA EMAIL                BDATE     DEPT                                                                                      
+---- --------------- --------------- ---------- ---------- -------------------- --------- ----                                                                                      
+B001 Anne            Broder          junior           3.17 broder@bu.edu        17-JAN-90 CS                                                                                        
+
+SQL> start query10.sql
+SQL> SELECT * FROM CLASSES CO
+  2  WHERE CO.CLASSID IN (SELECT CLASSID FROM ENROLLMENTS E WHERE E.CLASSID IN (SELECT CL.CLASSID FROM CLASSES CL WHERE CL.DEPT_CODE='CS'
+  3  AND CL.YEAR=2016 AND
+  4  CL.SEMESTER='Spring')
+  5  HAVING COUNT(*)<3
+  6  GROUP BY E.CLASSID);
+
+CLASS DEPT    COURSE#      SECT#       YEAR SEMESTER      LIMIT CLASS_SIZE FACU                                                                                                     
+----- ---- ---------- ---------- ---------- -------- ---------- ---------- ----                                                                                                     
+c0001 CS          432          1       2016 Spring           35         34 B101                                                                                                     
+
+SQL> 
+SQL> 
+SQL> start query11.sql
+SQL> SELECT DISTINCT S.B#, S.FIRSTNAME FROM STUDENTS S, CLASSES CL, ENROLLMENTS E
+  2  WHERE S.B#=E.B# AND E.CLASSID=CL.CLASSID
+  3  AND CL.COURSE# LIKE '4__';
+
+B#   FIRSTNAME                                                                                                                                                                      
+---- ---------------                                                                                                                                                                
+B003 Tracy                                                                                                                                                                          
+B004 Barbara                                                                                                                                                                        
+B001 Anne                                                                                                                                                                           
+
+SQL> start query12.sql
+SQL> SELECT CRS1.TITLE
+  2  FROM CLASSES CL1, COURSES CRS1, ENROLLMENTS E1
+  3  WHERE CL1.CLASSID=E1.CLASSID AND CL1.COURSE#=CRS1.COURSE#
+  4  AND E1.B#='B001' AND CL1.COURSE# NOT IN (SELECT CL2.COURSE# FROM CLASSES CL2, COURSES CRS2, ENROLLMENTS E2
+  5  WHERE CL2.CLASSID=E2.CLASSID AND CL2.COURSE#=CRS2.COURSE# AND E2.B#='B002')
+  6  GROUP BY CRS1.TITLE, CL1.COURSE#
+  7  ;
+
+TITLE                                                                                                                                                                               
+--------------------                                                                                                                                                                
+database systems                                                                                                                                                                    
+database systems                                                                                                                                                                    
+data structure                                                                                                                                                                      
+
+SQL> start query13.sql
+SQL> SELECT S.FIRSTNAME FROM STUDENTS S, ENROLLMENTS E, CLASSES CL WHERE S.B#=E.B# AND E.CLASSID=CL.CLASSID
+  2  AND COURSE# IN (SELECT CL.COURSE# FROM ENROLLMENTS E, CLASSES CL WHERE CL.CLASSID=E.CLASSID AND
+  3  E.B#='B005');
+
+FIRSTNAME                                                                                                                                                                           
+---------------                                                                                                                                                                     
+Terry                                                                                                                                                                               
+Jack                                                                                                                                                                                
+Anne                                                                                                                                                                                
+
+SQL> start query14.sql
+SQL> select DEPT_CODE, COURSE#, year, semester from classes group by dept_code, course#, year, semester having count(*)>1;
+
+DEPT    COURSE#       YEAR SEMESTER                                                                                                                                                 
+---- ---------- ---------- --------                                                                                                                                                 
+Math        314       2015 Fall                                                                                                                                                     
+
+SQL> 
+SQL> start query15.sql
+SQL> SELECT DISTINCT S.B#, S.FIRSTNAME FROM STUDENTS S, ENROLLMENTS E1, GRADES G1
+  2  WHERE E1.LGRADE=G1.LGRADE AND S.B#=E1.B#
+  3  AND G1.NGRADE= (SELECT MAX(G2.NGRADE) FROM ENROLLMENTS E2, GRADES G2 WHERE E2.LGRADE=G2.LGRADE);
+
+B#   FIRSTNAME                                                                                                                                                                      
+---- ---------------                                                                                                                                                                
+B007 Becky                                                                                                                                                                          
+B003 Tracy                                                                                                                                                                          
+B006 Terry                                                                                                                                                                          
+B001 Anne                                                                                                                                                                           
+
+SQL> start query16.sql
+SQL> SELECT CRS.DEPT_CODE, CRS.COURSE#, CRS.TITLE,
+  2  CASE
+  3  WHEN E.LGRADE IS NOT NULL THEN E.LGRADE
+  4  WHEN E.LGRADE IS NULL THEN 'to be assigned'
+  5  END AS LGRADE
+  6  FROM CLASSES CL, ENROLLMENTS E, COURSES CRS
+  7  WHERE E.CLASSID=CL.CLASSID AND CRS.COURSE#=CL.COURSE# AND E.B#='B003';
+
+DEPT    COURSE# TITLE                LGRADE                                                                                                                                         
+---- ---------- -------------------- --------------                                                                                                                                 
+CS          432 database systems     I                                                                                                                                              
+CS          432 database systems     A                                                                                                                                              
+CS          240 data structure       to be assigned                                                                                                                                 
+
+SQL> 
+SQL> start query17.sql
+SQL> SELECT DISTINCT CRS.*, S.GPA FROM STUDENTS S, ENROLLMENTS E, CLASSES CL, COURSES CRS
+  2  WHERE E.B#=S.B# AND E.CLASSID=CL.CLASSID AND CL.COURSE#=CRS.COURSE#
+  3  AND Crs.TITLE LIKE '%systems%' AND S.GPA>3.25;
+
+DEPT    COURSE# TITLE                       GPA                                                                                                                                     
+---- ---------- -------------------- ----------                                                                                                                                     
+CS          432 database systems              4                                                                                                                                     
+CS          532 database systems              4                                                                                                                                     
+
+SQL> start query18.sql
+SQL> SELECT S.B#, S.FIRSTNAME,
+  2  CASE
+  3  WHEN SUM(CC.CREDITS)>0 THEN SUM(CC.CREDITS)
+  4  WHEN SUM(CC.CREDITS) IS NULL THEN 0
+  5  END AS CREDITS
+  6  FROM STUDENTS S, ENROLLMENTS E, CLASSES CL, COURSES CRS, COURSE_CREDIT CC
+  7  WHERE S.B#=E.B#(+) AND E.CLASSID=CL.CLASSID(+) AND CL.COURSE#=CRS.COURSE#(+) AND CC.COURSE#(+)=CRS.COURSE#
+  8  GROUP BY S.B#, S.FIRSTNAME
+  9  ;
+
+B#   FIRSTNAME          CREDITS                                                                                                                                                     
+---- --------------- ----------                                                                                                                                                     
+B007 Becky                    4                                                                                                                                                     
+B003 Tracy                   12                                                                                                                                                     
+B002 Terry                    4                                                                                                                                                     
+B004 Barbara                  8                                                                                                                                                     
+B006 Terry                    3                                                                                                                                                     
+B001 Anne                    23                                                                                                                                                     
+B008 Tom                      0                                                                                                                                                     
+B005 Jack                     3                                                                                                                                                     
+
+8 rows selected.
+
+SQL> 
+SQL> start query19.sql
+SQL> SELECT AVG(CC.CREDITS) FROM ENROLLMENTS E, CLASSES CL, COURSES CRS, COURSE_CREDIT CC
+  2  WHERE E.CLASSID=CL.CLASSID AND CL.COURSE#=CRS.COURSE# AND CC.COURSE#=CRS.COURSE#
+  3  AND E.LGRADE IS NOT NULL;
+
+AVG(CC.CREDITS)                                                                                                                                                                     
+---------------                                                                                                                                                                     
+     3.78571429                                                                                                                                                                     
+
+SQL> start query20.sql
+SQL> SELECT S.B#, SUM(G.NGRADE)/COUNT(G.LGRADE) AS cgpa  FROM STUDENTS S, ENROLLMENTS E, CLASSES CL, GRADES G
+  2  WHERE S.B#=E.B#(+) AND E.CLASSID=CL.CLASSID(+) AND E.LGRADE=G.LGRADE(+)
+  3  GROUP BY S.B#
+  4  ORDER BY NVL(SUM(G.NGRADE)/COUNT(G.LGRADE),0) DESC
+  5  ;
+
+B#         CGPA                                                                                                                                                                     
+---- ----------                                                                                                                                                                     
+B006          4                                                                                                                                                                     
+B007          4                                                                                                                                                                     
+B001 3.16666667                                                                                                                                                                     
+B002          3                                                                                                                                                                     
+B005          3                                                                                                                                                                     
+B004       2.65                                                                                                                                                                     
+B003          2                                                                                                                                                                     
+B008                                                                                                                                                                                
+
+8 rows selected.
+
+SQL> spool off
